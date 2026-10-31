@@ -13,10 +13,11 @@ const TITLE_SIZE = 150;
 const TITLE_WIDTH = 1700;
 
 const STICK_DEADZONE = 0.18;
-const CURSOR_SPEED = 1500;
-const OPTION_FRICTION = 0.55;
+const PICK_THRESHOLD = 0.45;
+const CHARGE_SECONDS = 0.75;
+const TRIGGER_DEADZONE = 0.08;
 
-const BTN = { A: 0, B: 1, LB: 4, RB: 5, LEFT: 14, RIGHT: 15 } as const;
+const BTN = { A: 0, B: 1, LB: 4, RB: 5, LT: 6, RT: 7, LEFT: 14, RIGHT: 15 } as const;
 
 const ANSWER_STORAGE = "tlo-answer";
 const DISPLAY_STORAGE = "tlo-display-id";
@@ -42,14 +43,12 @@ const promptEl = $<HTMLParagraphElement>("#prompt");
 const resultLockup = $<HTMLDivElement>("#result-lockup");
 const waitingText = $<HTMLParagraphElement>("#waiting-text");
 const options = [...document.querySelectorAll<HTMLButtonElement>(".option")];
+const waitingLockup = $<HTMLDivElement>(".waiting .lockup");
+const controls = [...document.querySelectorAll<HTMLElement>(".control")];
 
 const OPTION_RECTS = [
   { x: 276.41, y: 476, w: 609, h: 174 },
   { x: 1033.59, y: 476, w: 609, h: 174 },
-];
-const SNAP_POINTS = [
-  { x: 363, y: 563 },
-  { x: 1555, y: 563 },
 ];
 
 let question: Question = DEFAULT_QUESTION;
@@ -63,11 +62,16 @@ let hover: number | null = null;
 let keyboardFocus: number | null = null;
 let lastSecond = -1;
 const cursor = { x: STAGE_W / 2, y: 780 };
-let snapTarget: { x: number; y: number } | null = null;
 const prevButtons: boolean[] = [];
 let padName: string | null = null;
 let online = PREVIEW;
 let introTimer = 0;
+let padFocus: number | null = null;
+let charge = 0;
+let lastChargeBuzz = 0;
+let lean = 0;
+let nextBeatAt = 0;
+let beatTimer = 0;
 let resultTimer = 0;
 let sensitivity: number = SENSITIVITY.default;
 let live: { send: (msg: Record<string, unknown>) => void } | null = null;
@@ -137,10 +141,11 @@ function applyQuestion(q: Question) {
 
 const btnA = '<span class="btn btn-a">A</span>';
 const btnStick = '<span class="btn btn-stick">LS</span>';
+const btnRt = '<span class="btn btn-trigger">RT</span>';
 
 function renderHint() {
   if (state === "intro" || state === "running") {
-    hint.innerHTML = `<span class="hint-item">${btnStick} Move</span><span class="hint-item">${btnA} Choose</span>`;
+    hint.innerHTML = `<span class="hint-item">${btnStick} Pick a side</span><span class="hint-item">${btnRt} Squeeze to lock in</span><span class="hint-item">${btnA} Quick choose</span>`;
   } else if (state === "result") {
     hint.innerHTML = PREVIEW
       ? `<span class="hint-item">Press ${btnA} to replay</span>`
@@ -203,6 +208,10 @@ function clearRound() {
   options.forEach((o) => o.classList.remove("is-chosen", "is-hover", "is-pressed"));
   hover = null;
   keyboardFocus = null;
+  padFocus = null;
+  setCharge(0);
+  window.clearTimeout(beatTimer);
+  nextBeatAt = 0;
   cursor.x = STAGE_W / 2;
   cursor.y = 780;
 }
@@ -258,7 +267,9 @@ function showResult(index: number, timedOut: boolean, animate: boolean) {
 
 function choose(index: number, timedOut = false) {
   if (state !== "running") return;
-  rumble(timedOut ? 500 : 260, timedOut ? 1 : 0.8, 0.6);
+  window.clearTimeout(beatTimer);
+  setCharge(0);
+  rumble(timedOut ? 600 : 380, 1, timedOut ? 0.8 : 1);
   const option: 0 | 1 = index === 1 ? 1 : 0;
   if (!PREVIEW) {
     const answer: StoredAnswer = { revision, option, timedOut };
@@ -279,11 +290,6 @@ function confirm() {
   }
 }
 
-function snapTo(index: number) {
-  if (state !== "running" && state !== "intro") return;
-  snapTarget = SNAP_POINTS[index];
-}
-
 function setTimer(t: number) {
   fill.style.setProperty("--t", String(Math.max(0, Math.min(1, t))));
 }
@@ -302,13 +308,35 @@ function tickTimer(now: number) {
     ghost.classList.remove("tick");
     void ghost.offsetWidth;
     ghost.classList.add("tick");
-    if (seconds <= question.lowSeconds && seconds > 0) {
-      stage.dataset.low = "";
-      rumble(70, 0.35, 0.2);
-    }
+    if (seconds <= question.lowSeconds && seconds > 0) stage.dataset.low = "";
   }
 
+  heartbeat(now, total - elapsed);
   if (t <= 0) choose(question.timeoutOption, true);
+}
+
+function heartbeat(now: number, remainingMs: number) {
+  if (remainingMs <= 0) return;
+  const low = remainingMs <= question.lowSeconds * 1000;
+  const progress = 1 - remainingMs / choiceMs();
+  const period = low ? 430 : 1000 - 350 * progress;
+  if (nextBeatAt === 0) nextBeatAt = now + 250;
+  if (now < nextBeatAt) return;
+  nextBeatAt = now + period;
+  fill.classList.remove("beat");
+  void fill.offsetWidth;
+  fill.classList.add("beat");
+  if (charge > 0.05) return;
+  const strength = low ? 0.75 : 0.18 + 0.3 * progress;
+  rumble(55, strength, strength * 0.5);
+  beatTimer = window.setTimeout(() => {
+    if (state === "running" && charge <= 0.05) rumble(40, strength * 0.55, strength * 0.3);
+  }, 150);
+}
+
+function setCharge(value: number) {
+  charge = value;
+  options.forEach((o, i) => o.style.setProperty("--charge", String(i === hover ? value : 0)));
 }
 
 function storedAnswer(rev: number): StoredAnswer | null {
@@ -366,46 +394,99 @@ const isDown = (pad: Gamepad, i: number) => {
   return !!b && (b.pressed || b.value > 0.5);
 };
 
+function markControl(input: string, active: boolean) {
+  for (const c of controls) {
+    if (c.dataset.input !== input) continue;
+    c.classList.toggle("is-active", active);
+    if (active) c.classList.add("is-done");
+  }
+}
+
 function pollPad(dt: number) {
   const pad = activePad();
-  if (!pad) return;
+  if (!pad) {
+    lean += (leanTarget(0) - lean) * (1 - Math.exp(-dt * 10));
+    stage.style.setProperty("--lean", lean.toFixed(3));
+    return;
+  }
   if (!padName) {
     padName = cleanPadName(pad.id);
     renderStatus();
   }
 
   const pressed = (i: number) => isDown(pad, i) && !prevButtons[i];
-
   const lx = pad.axes[0] ?? 0;
   const ly = pad.axes[1] ?? 0;
-  const mag = Math.hypot(lx, ly);
-  if (mag > STICK_DEADZONE) {
-    const strength = ((mag - STICK_DEADZONE) / (1 - STICK_DEADZONE)) ** 2;
-    const friction = hitTest(cursor.x, cursor.y) !== null ? OPTION_FRICTION : 1;
-    const speed = CURSOR_SPEED * sensitivity * strength * friction * dt;
-    cursor.x += (lx / mag) * speed;
-    cursor.y += (ly / mag) * speed;
-    snapTarget = null;
+  const stickX = Math.abs(lx) > STICK_DEADZONE ? lx : 0;
+  const stickY = Math.abs(ly) > STICK_DEADZONE ? ly : 0;
+  const trigger = Math.max(pad.buttons[BTN.RT]?.value ?? 0, pad.buttons[BTN.LT]?.value ?? 0);
+
+  if (stickX !== 0 || stickY !== 0) {
+    stage.dataset.cursor = "hidden";
     keyboardFocus = null;
-    stage.dataset.cursor = "visible";
+  }
+  const threshold = PICK_THRESHOLD / sensitivity;
+  if (stickX <= -threshold) padFocus = 0;
+  if (stickX >= threshold) padFocus = 1;
+  if (pressed(BTN.LEFT) || pressed(BTN.LB)) padFocus = 0;
+  if (pressed(BTN.RIGHT) || pressed(BTN.RB)) padFocus = 1;
+
+  lean += (leanTarget(stickX) - lean) * (1 - Math.exp(-dt * 10));
+  stage.style.setProperty("--lean", lean.toFixed(3));
+  stage.style.setProperty("--tilt-y", (stickY * 0.6).toFixed(3));
+  stage.style.setProperty("--rt", trigger.toFixed(3));
+
+  if (state === "waiting") {
+    markControl("stick", stickX !== 0 || stickY !== 0);
+    markControl("rt", trigger > TRIGGER_DEADZONE);
+    markControl("a", isDown(pad, BTN.A));
+    if (pressed(BTN.A)) {
+      rumble(90, 0.4, 0.6);
+      waitingLockup.classList.remove("ping");
+      void waitingLockup.offsetWidth;
+      waitingLockup.classList.add("ping");
+    }
+    if (trigger > TRIGGER_DEADZONE && performance.now() - lastChargeBuzz > 110) {
+      lastChargeBuzz = performance.now();
+      rumble(120, trigger * 0.6, trigger * 0.4);
+    }
   }
 
-  if (pressed(BTN.LEFT) || pressed(BTN.LB)) snapTo(0);
-  if (pressed(BTN.RIGHT) || pressed(BTN.RB)) snapTo(1);
+  if (state === "running" && hover !== null) {
+    if (trigger > TRIGGER_DEADZONE) {
+      setCharge(Math.min(1, charge + (dt / CHARGE_SECONDS) * (0.35 + 0.65 * trigger)));
+      if (performance.now() - lastChargeBuzz > 100) {
+        lastChargeBuzz = performance.now();
+        rumble(130, 0.15 + 0.85 * charge, 0.2 + 0.6 * charge);
+      }
+      if (charge >= 1) confirm();
+    } else if (charge > 0) {
+      setCharge(Math.max(0, charge - dt * 4));
+    }
+  } else if (charge > 0) {
+    setCharge(0);
+  }
+
   if (pressed(BTN.A)) confirm();
-  if (pressed(BTN.A) || pressed(BTN.LEFT) || pressed(BTN.RIGHT)) stage.dataset.cursor = "visible";
 
   pad.buttons.forEach((_, i) => {
     prevButtons[i] = isDown(pad, i);
   });
 }
 
+function leanTarget(stickX: number) {
+  if (state === "waiting") return stickX;
+  if (state !== "running" && state !== "intro") return 0;
+  if (stickX !== 0) return stickX;
+  return hover === 0 ? -0.35 : hover === 1 ? 0.35 : 0;
+}
+
 window.addEventListener("pointermove", (e) => {
   const p = toStage(e.clientX, e.clientY);
   cursor.x = p.x;
   cursor.y = p.y;
-  snapTarget = null;
   keyboardFocus = null;
+  padFocus = null;
   stage.dataset.cursor = "visible";
 });
 
@@ -456,9 +537,10 @@ function updateHover() {
     }
     return;
   }
-  const nextHover = keyboardFocus ?? hitTest(cursor.x, cursor.y);
+  const nextHover = keyboardFocus ?? padFocus ?? hitTest(cursor.x, cursor.y);
   if (nextHover === hover) return;
   hover = nextHover;
+  setCharge(0);
   options.forEach((o, i) => o.classList.toggle("is-hover", i === nextHover));
   if (nextHover === null) delete stage.dataset.hover;
   else {
@@ -474,12 +556,6 @@ function frame(now: number) {
 
   pollPad(dt);
 
-  if (snapTarget) {
-    const k = 1 - Math.exp(-dt * 18);
-    cursor.x += (snapTarget.x - cursor.x) * k;
-    cursor.y += (snapTarget.y - cursor.y) * k;
-    if (Math.hypot(snapTarget.x - cursor.x, snapTarget.y - cursor.y) < 0.5) snapTarget = null;
-  }
   cursor.x = Math.min(STAGE_W - 4, Math.max(0, cursor.x));
   cursor.y = Math.min(STAGE_H - 4, Math.max(0, cursor.y));
   cursorEl.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;

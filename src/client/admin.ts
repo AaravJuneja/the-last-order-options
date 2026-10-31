@@ -214,7 +214,7 @@ sens.addEventListener("change", async () => {
       method: "POST",
       body: JSON.stringify({ action: "settings", sensitivity: value }),
     });
-    setStatus(`Cursor speed set to ${value.toFixed(2)}×`);
+    setStatus(`Stick sensitivity set to ${value.toFixed(2)}×`);
   } catch (err) {
     handleError(err);
   } finally {

@@ -657,6 +657,125 @@ body {
   opacity: 0;
 }
 
+
+.stage {
+  --lean: 0;
+  --tilt-y: 0;
+  --rt: 0;
+}
+.option {
+  translate: calc(var(--lean) * 26px) 0;
+}
+.ghost {
+  translate: calc(var(--lean) * -60px) 0;
+}
+.timer {
+  translate: calc(var(--lean) * 10px) 0;
+}
+
+.dot::after {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from -90deg,
+    var(--order) calc(var(--charge, 0) * 360deg),
+    transparent 0
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+  filter: drop-shadow(0 0 12px rgba(159, 121, 247, 0.9));
+  pointer-events: none;
+}
+.option.is-hover .dot {
+  transform: scale(calc(1.07 + var(--charge, 0) * 0.08));
+}
+.option.is-pressed .dot {
+  transform: scale(0.9);
+}
+
+.timer-fill.beat {
+  animation: beat 260ms ease-out;
+}
+@keyframes beat {
+  30% {
+    filter: brightness(1.45);
+    scale: 1 1.18;
+  }
+}
+
+.btn-trigger {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px 12px 6px 6px;
+  border: 2px solid var(--paper);
+  font-family: var(--mono);
+  font-size: 17px;
+  overflow: hidden;
+}
+.trigger-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--rt) * 100%);
+  background: var(--order);
+  opacity: 0.6;
+}
+
+.controls {
+  display: flex;
+  gap: 18px;
+  margin-top: -20px;
+}
+.control {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 24px 12px 12px;
+  border-radius: 33.444px;
+  background: var(--slab);
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+  transition:
+    background 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+}
+.control.is-done {
+  color: white;
+  box-shadow: inset 0 0 0 2px rgba(159, 121, 247, 0.6);
+}
+.control.is-active {
+  background: rgba(159, 121, 247, 0.28);
+  box-shadow:
+    inset 0 0 0 2px var(--order),
+    0 0 26px rgba(159, 121, 247, 0.5);
+}
+
+.waiting .lockup {
+  translate: calc(var(--lean) * 40px) calc(var(--tilt-y) * 30px);
+  rotate: calc(var(--lean) * 2deg);
+  transition:
+    translate 120ms ease-out,
+    rotate 120ms ease-out;
+}
+.waiting .lockup.ping {
+  animation: ping 380ms ease-out;
+}
+@keyframes ping {
+  25% {
+    scale: 1.06;
+    filter: brightness(1.35) drop-shadow(0 0 30px rgba(255, 216, 22, 0.6));
+  }
+}
+.waiting-bar span {
+  filter: brightness(calc(1 + var(--rt) * 0.8));
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
