@@ -1,0 +1,20 @@
+{
+  "name": "the-last-order-options",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bash scripts/build.sh",
+    "dev": "bun run build && wrangler dev",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+    "deploy": "bash scripts/deploy.sh",
+    "db:schema": "~/.turso/turso db shell the-last-order < db/schema.sql"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261030.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.156.0"
+  }
+}

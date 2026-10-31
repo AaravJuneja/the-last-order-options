@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "the-last-order-options",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-10-30",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "TURSO_DATABASE_URL": "libsql://the-last-order-juneja.aws-ap-south-1.turso.io"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "LIVE", "class_name": "LiveRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LiveRoom"] }],
+  "routes": [
+    { "pattern": "bhatura.squeakyfiddlepro.me", "custom_domain": true }
+  ],
+  "observability": { "enabled": true }
+}

@@ -1,0 +1,24 @@
+@font-face {
+  font-family: "Iosevka Charon Mono";
+  src: url("../../fonts/iosevka-charon-mono-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("../../fonts/pixelify-sans-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Rostex";
+  src: url("../../fonts/rostex-regular.otf") format("opentype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Rostex Outline";
+  src: url("../../fonts/rostex-outline.otf") format("opentype");
+  font-weight: 400;
+  font-display: block;
+}

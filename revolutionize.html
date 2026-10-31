@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#080808" />
+    <title>Revolutionize</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./src/client/admin.css" />
+  </head>
+  <body>
+    <section class="lock" id="lock" hidden>
+      <form class="lock-panel" id="lock-form">
+        <h1 class="brand">REVOLUTIONIZE</h1>
+        <label class="field">
+          <span class="field-label">Admin key</span>
+          <input id="lock-key" type="password" autocomplete="current-password" required />
+        </label>
+        <p class="error" id="lock-error" role="alert"></p>
+        <button class="btn btn-primary" type="submit">Unlock</button>
+      </form>
+    </section>
+
+    <div class="app" id="app" data-view="live" hidden>
+      <header class="topbar">
+        <h1 class="brand">REVOLUTIONIZE</h1>
+        <p class="topbar-status" id="sync-status" role="status"></p>
+        <a class="btn btn-quiet topbar-game" href="/" target="_blank" rel="noopener">Open game</a>
+        <button class="btn btn-quiet" type="button" id="lock-button">Lock</button>
+      </header>
+
+      <aside class="sidebar">
+        <section class="live" id="live" data-mode="waiting">
+          <div class="live-head">
+            <span class="live-dot" aria-hidden="true"></span>
+            <h2>Live</h2>
+            <span class="live-screens" id="live-screens">Connecting…</span>
+          </div>
+          <p class="live-now" id="live-now">Waiting screen</p>
+          <p class="live-prompt" id="live-prompt" hidden></p>
+          <div class="live-controls">
+            <button class="btn btn-quiet" type="button" id="live-prev">Previous</button>
+            <button class="btn btn-quiet" type="button" id="live-wait">Waiting screen</button>
+            <button class="btn btn-primary" type="button" id="live-next">Start</button>
+            <p class="live-upnext" id="live-upnext"></p>
+          </div>
+          <div class="tally" id="tally" hidden>
+            <p class="tally-head" id="tally-head"></p>
+            <ul class="tally-rows" id="tally-rows"></ul>
+          </div>
+          <label class="sens">
+            <span class="sens-head">
+              <span>Cursor speed</span>
+              <output id="sens-value" for="sens">1.00×</output>
+            </span>
+            <input type="range" id="sens" min="0.25" max="3" step="0.05" value="1" />
+          </label>
+          <button class="link-btn" type="button" id="live-reset">Back to the start</button>
+          <p class="kbd-hint"><kbd>→</kbd> next · <kbd>←</kbd> previous · <kbd>W</kbd> waiting screen</p>
+        </section>
+
+        <div class="sidebar-head">
+          <h2>Questions</h2>
+          <button class="btn btn-quiet" type="button" id="new-question">New question</button>
+        </div>
+        <p class="sidebar-note">Played top to bottom. Hidden questions are skipped.</p>
+        <ol class="list" id="list"></ol>
+      </aside>
+
+      <main class="editor">
+        <div class="editor-head">
+          <button class="back-btn" type="button" id="back">‹ Questions</button>
+          <span class="editor-title" id="editor-title"></span>
+        </div>
+        <div class="preview">
+          <iframe id="preview" src="/?preview" title="Preview of the question" tabindex="-1"></iframe>
+          <button class="btn btn-quiet preview-replay" type="button" id="replay">Replay</button>
+        </div>
+
+        <form class="form" id="form" novalidate>
+          <section class="group">
+            <div class="row timing">
+              <label class="field">
+                <span class="field-label">Time to answer (seconds)</span>
+                <input name="durationSeconds" type="number" min="3" max="300" step="1" inputmode="numeric" />
+              </label>
+              <label class="field">
+                <span class="field-label">Warning for the last (seconds)</span>
+                <input name="lowSeconds" type="number" min="0" max="30" step="1" inputmode="numeric" />
+              </label>
+            </div>
+            <label class="field">
+              <span class="field-label">Question <span class="count" data-for="prompt"></span></span>
+              <textarea name="prompt" rows="3" data-limit="prompt"></textarea>
+            </label>
+          </section>
+
+          <section class="options">
+            <fieldset class="option-card" data-side="left">
+              <legend><span class="dot"></span>Option 1</legend>
+              <label class="field">
+                <span class="field-label">Label <span class="count" data-for="options.0.label"></span></span>
+                <input name="options.0.label" data-limit="label" />
+              </label>
+              <label class="field">
+                <span class="field-label">Shown on hover <span class="count" data-for="options.0.sub"></span></span>
+                <textarea name="options.0.sub" rows="2" data-limit="sub"></textarea>
+              </label>
+              <label class="field">
+                <span class="field-label">Notification after choosing <span class="count" data-for="options.0.toast"></span></span>
+                <input name="options.0.toast" data-limit="toast" />
+              </label>
+              <label class="field">
+                <span class="field-label">Result text <span class="count" data-for="options.0.resultSub"></span></span>
+                <textarea name="options.0.resultSub" rows="2" data-limit="resultSub"></textarea>
+              </label>
+            </fieldset>
+
+            <fieldset class="option-card" data-side="right">
+              <legend><span class="dot"></span>Option 2</legend>
+              <label class="field">
+                <span class="field-label">Label <span class="count" data-for="options.1.label"></span></span>
+                <input name="options.1.label" data-limit="label" />
+              </label>
+              <label class="field">
+                <span class="field-label">Shown on hover <span class="count" data-for="options.1.sub"></span></span>
+                <textarea name="options.1.sub" rows="2" data-limit="sub"></textarea>
+              </label>
+              <label class="field">
+                <span class="field-label">Notification after choosing <span class="count" data-for="options.1.toast"></span></span>
+                <input name="options.1.toast" data-limit="toast" />
+              </label>
+              <label class="field">
+                <span class="field-label">Result text <span class="count" data-for="options.1.resultSub"></span></span>
+                <textarea name="options.1.resultSub" rows="2" data-limit="resultSub"></textarea>
+              </label>
+            </fieldset>
+          </section>
+
+          <section class="group">
+            <div class="row">
+              <fieldset class="field">
+                <legend class="field-label">When time runs out, choose</legend>
+                <div class="segmented">
+                  <label><input type="radio" name="timeoutOption" value="0" /><span>Option 1</span></label>
+                  <label><input type="radio" name="timeoutOption" value="1" /><span>Option 2</span></label>
+                </div>
+              </fieldset>
+              <label class="field">
+                <span class="field-label">Notification when time runs out <span class="count" data-for="timeoutToast"></span></span>
+                <input name="timeoutToast" data-limit="timeoutToast" />
+              </label>
+            </div>
+            <label class="field">
+              <span class="field-label">Result title (up to 3 lines)</span>
+              <textarea name="resultTitle" rows="2" class="title-input"></textarea>
+            </label>
+          </section>
+
+          <footer class="actions">
+            <label class="check">
+              <input type="checkbox" name="enabled" />
+              <span>Show in the game</span>
+            </label>
+            <span class="dirty" id="dirty" hidden>Unsaved changes</span>
+            <span class="spacer"></span>
+            <button class="btn btn-danger" type="button" id="delete">Delete</button>
+            <button class="btn btn-quiet" type="button" id="duplicate">Duplicate</button>
+            <button class="btn btn-primary" type="submit" id="save">Save</button>
+          </footer>
+          <ul class="errors" id="errors" role="alert"></ul>
+        </form>
+      </main>
+
+      <nav class="tabbar" aria-label="Sections">
+        <button type="button" class="tab" data-tab="live" aria-current="page">
+          <span class="tab-dot" aria-hidden="true"></span>Live
+        </button>
+        <button type="button" class="tab" data-tab="questions">
+          Questions <span class="tab-count" id="tab-count"></span>
+        </button>
+      </nav>
+    </div>
+
+    <script type="module" src="./src/client/admin.ts"></script>
+  </body>
+</html>

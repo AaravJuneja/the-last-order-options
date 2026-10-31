@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080808" />
+    <title>The Last Order</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./src/client/styles.css" />
+  </head>
+  <body>
+    <main class="viewport">
+      <div class="stage" id="stage" data-state="waiting" data-cursor="visible">
+        <div class="ghost" aria-hidden="true"><span id="ghost">10</span></div>
+
+        <p class="prompt" id="prompt">
+          EXUN gets one final secret order: wipe the firmware completely and delete every trace of
+          NIGIRO by 31 October.
+        </p>
+
+        <div class="timer" role="timer" aria-label="Time left to choose">
+          <div class="timer-fill" id="timer-fill"></div>
+        </div>
+
+        <button class="option" type="button" data-side="left" data-index="0">
+          <span class="slab"></span>
+          <span class="dot"><span class="glyph">A</span></span>
+          <span class="text">
+            <span class="label">WIPE THE FIRMWARE</span>
+            <span class="sub">The scientists still inside would die.</span>
+          </span>
+        </button>
+
+        <button class="option" type="button" data-side="right" data-index="1">
+          <span class="slab"></span>
+          <span class="dot"><span class="glyph">A</span></span>
+          <span class="text">
+            <span class="label">HELP NANO</span>
+            <span class="sub">If you still want to help, you know where to come.</span>
+          </span>
+        </button>
+
+        <div class="toast" role="status">
+          <span id="toast-text"></span>
+        </div>
+
+        <div class="result" aria-live="polite">
+          <div class="lockup" id="result-lockup" aria-label="The last order">
+            <span class="lockup-outline" aria-hidden="true">THE LAST<br />ORDER</span>
+            <span class="lockup-fill" aria-hidden="true">THE LAST<br />ORDER</span>
+          </div>
+          <p class="result-label" id="result-label"></p>
+          <p class="result-sub" id="result-sub"></p>
+        </div>
+
+        <div class="waiting" aria-live="polite">
+          <div class="lockup" aria-label="The last order">
+            <span class="lockup-outline" aria-hidden="true">THE LAST<br />ORDER</span>
+            <span class="lockup-fill" aria-hidden="true">THE LAST<br />ORDER</span>
+          </div>
+          <div class="waiting-bar"><span></span></div>
+          <p class="waiting-text" id="waiting-text">Waiting to start</p>
+        </div>
+
+        <div class="hint" id="hint"></div>
+        <p class="status" id="status"></p>
+
+        <svg class="cursor" id="cursor" width="33" height="54" viewBox="0 0 11 18" aria-hidden="true">
+          <path
+            d="M0.5 0.5 V15.5 H1.5 V14.5 H2.5 V13.5 H3.5 V12.5 H4.5 V14.5 H5.5 V16.5 H6.5 V17.5 H8.5 V16.5 H9.5 V15.5 H8.5 V13.5 H7.5 V11.5 H10.5 V10.5 H9.5 V9.5 H8.5 V8.5 H7.5 V7.5 H6.5 V6.5 H5.5 V5.5 H4.5 V4.5 H3.5 V3.5 H2.5 V2.5 H1.5 V1.5 H0.5 Z"
+          />
+        </svg>
+      </div>
+    </main>
+    <script type="module" src="./src/client/main.ts"></script>
+  </body>
+</html>
