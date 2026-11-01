@@ -10,15 +10,3 @@
   font-weight: 400;
   font-display: block;
 }
-@font-face {
-  font-family: "Rostex";
-  src: url("../../fonts/rostex-regular.otf") format("opentype");
-  font-weight: 400;
-  font-display: block;
-}
-@font-face {
-  font-family: "Rostex Outline";
-  src: url("../../fonts/rostex-outline.otf") format("opentype");
-  font-weight: 400;
-  font-display: block;
-}

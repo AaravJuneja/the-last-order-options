@@ -267,7 +267,7 @@ body {
 }
 
 .glyph {
-  font-family: "Rostex", var(--mono);
+  font-family: "Pixelify Sans", var(--mono);
   font-size: 92px;
   line-height: 1;
   color: var(--void);
@@ -450,13 +450,13 @@ body {
   grid-area: 1 / 1;
 }
 .lockup-outline {
-  font-family: "Rostex Outline", var(--mono);
+  font-family: "Pixelify Sans", var(--mono);
   color: var(--order);
   translate: -7px -6px;
   filter: drop-shadow(0 0 14px rgba(159, 121, 247, 0.85));
 }
 .lockup-fill {
-  font-family: "Rostex", var(--mono);
+  font-family: "Pixelify Sans", var(--mono);
   color: var(--signal);
   text-shadow: 0 0 22px rgba(255, 216, 22, 0.35);
 }
@@ -531,7 +531,7 @@ body {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  font-family: "Rostex", var(--mono);
+  font-family: "Pixelify Sans", var(--mono);
   font-size: 22px;
   line-height: 1;
 }
